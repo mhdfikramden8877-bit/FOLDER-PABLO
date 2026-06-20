@@ -1,39 +1,3 @@
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getDatabase,
-ref,
-set,
-onValue
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyBn3LXmBVnX3r820EcjtiIhh50WaPzvy9I",
-
-authDomain: "fikram-40e2f.firebaseapp.com",
-
-databaseURL:
-"https://fikram-40e2f-default-rtdb.asia-southeast1.firebasedatabase.app/",
-
-projectId: "fikram-40e2f",
-
-storageBucket:
-"fikram-40e2f.firebasestorage.app",
-
-messagingSenderId: "28997536264",
-
-appId:
-"1:28997536264:web:37838cac2df3eb32475fbd"
-
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getDatabase(app);
-
 const staffList = [
 
 "KENDRICK TANRIO - X1318081",
@@ -53,7 +17,7 @@ const staffList = [
 "MUHAMMAD RIDHO - E5112295",
 "NANDA PRATAMA - E6628682",
 "DEA PHASYA JUAND - E5022709",
-"STEPHANIE CANG E9519256",
+"STEPHANIE CANG - E9519256",
 "DIEGO ALLANANDA PRAYOGA - E0289424",
 "FERI ANDIKA - E1715387",
 "MUHAMMAD YASIR - X7096487",
@@ -74,6 +38,8 @@ const staffList = [
 const container =
 document.getElementById("staffContainer");
 
+const activeIntervals = {};
+
 staffList.forEach((nama,index)=>{
 
 container.innerHTML += `
@@ -84,13 +50,15 @@ container.innerHTML += `
 ${nama}
 </div>
 
-<div class="status" id="status-${index}">
+<div class="status"
+id="status-${index}">
 Status : Standby
 </div>
 
 <div class="timer-box">
 
-<div class="timer" id="timer-${index}">
+<div class="timer"
+id="timer-${index}">
 16:00
 </div>
 
@@ -98,15 +66,13 @@ Status : Standby
 
 <button
 class="izin-btn"
-onclick="mulaiTimer(${index})"
->
+onclick="mulaiTimer(${index})">
 IZIN
 </button>
 
 <button
 class="masuk-btn"
-onclick="stopTimer(${index})"
->
+onclick="stopTimer(${index})">
 MASUK
 </button>
 
@@ -116,132 +82,75 @@ MASUK
 
 });
 
-const activeIntervals = {};
-
-window.mulaiTimer = function(index){
-
-const startTime = Date.now();
-
-set(ref(db,"staff/"+index),{
-
-status:"izin",
-
-startTime:startTime
-
-});
-
-}
-
-window.stopTimer = function(index){
-
-if(activeIntervals[index]){
-
-clearInterval(activeIntervals[index]);
-
-}
-
-set(ref(db,"staff/"+index),{
-
-status:"standby",
-
-startTime:0
-
-});
-
-}
-
-for(let i=0;i<staffList.length;i++){
-
-const staffRef = ref(db,"staff/"+i);
-
-onValue(staffRef,(snapshot)=>{
-
-const data = snapshot.val();
+function mulaiTimer(index){
 
 const timer =
-document.getElementById("timer-"+i);
+document.getElementById(`timer-${index}`);
 
 const status =
-document.getElementById("status-"+i);
-
-if(data){
-
-if(data.status=="izin"){
+document.getElementById(`status-${index}`);
 
 status.innerHTML =
 "Status : Sedang Izin";
 
-updateTimer(i,data.startTime);
-
-}else{
-
-status.innerHTML =
-"Status : Standby";
-
-timer.innerHTML = "16:00";
-
-if(activeIntervals[i]){
-
-clearInterval(activeIntervals[i]);
-
-}
-
-}
-
-}
-
-});
-
-}
-
-function updateTimer(index,startTime){
-
-const timer =
-document.getElementById("timer-"+index);
-
-if(activeIntervals[index]){
+let duration = 16 * 60;
 
 clearInterval(activeIntervals[index]);
-
-}
 
 activeIntervals[index] = setInterval(()=>{
 
-const sekarang = Date.now();
+let minutes =
+Math.floor(duration / 60);
 
-const selisih =
-16*60 - Math.floor((sekarang-startTime)/1000);
+let seconds =
+duration % 60;
 
-if(selisih<=0){
+if(seconds < 10){
 
-timer.innerHTML="SELESAI";
-
-clearInterval(activeIntervals[index]);
-
-return;
-
-}
-
-const menit =
-Math.floor(selisih/60);
-
-let detik =
-selisih%60;
-
-if(detik<10){
-
-detik="0"+detik;
+seconds = "0" + seconds;
 
 }
 
 timer.innerHTML =
-menit+":"+detik;
+minutes + ":" + seconds;
+
+duration--;
+
+if(duration < 0){
+
+clearInterval(
+activeIntervals[index]
+);
+
+timer.innerHTML =
+"SELESAI";
+
+status.innerHTML =
+"Status : Telat";
+
+}
 
 },1000);
 
 }
 
-window.filterNama = function(){
+function stopTimer(index){
+
+clearInterval(
+activeIntervals[index]
+);
+
+document.getElementById(
+`timer-${index}`
+).innerHTML = "16:00";
+
+document.getElementById(
+`status-${index}`
+).innerHTML = "Status : Standby";
+
+}
+
+function filterNama(){
 
 const input =
 document.getElementById("searchInput")
@@ -260,11 +169,11 @@ card.querySelector(".nama")
 
 if(nama.includes(input)){
 
-card.style.display="block";
+card.style.display = "block";
 
 }else{
 
-card.style.display="none";
+card.style.display = "none";
 
 }
 
